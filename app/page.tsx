@@ -19,8 +19,46 @@ import ImageCarousel from "./components/image-carousel"
 export default function MealmoLanding() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const openWaitlistModal = () => {
+  // Replace with your actual GHL webhook URL
+  const GHL_WEBHOOK_URL = "YOUR_GHL_WEBHOOK_URL_HERE"
+
+  const openWaitlistModal = (buttonLocation = "unknown") => {
     setIsModalOpen(true)
+    // Track button click
+    trackEvent("waitlist_button_clicked", { button_location: buttonLocation })
+  }
+
+  const handleWaitlistClick = (buttonLocation: string) => {
+    openWaitlistModal(buttonLocation)
+  }
+
+  // Function to track events to GHL
+  const trackEvent = async (eventType: string, additionalData: any = {}) => {
+    if (!GHL_WEBHOOK_URL || GHL_WEBHOOK_URL === "YOUR_GHL_WEBHOOK_URL_HERE") {
+      console.log("GHL webhook not configured")
+      return
+    }
+
+    try {
+      await fetch(GHL_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event_type: eventType,
+          timestamp: new Date().toISOString(),
+          page_url: window.location.href,
+          page_title: document.title,
+          referrer: document.referrer,
+          user_agent: navigator.userAgent,
+          ...additionalData
+        })
+      })
+      console.log(`Event tracked: ${eventType}`)
+    } catch (error) {
+      console.error('Failed to track event:', error)
+    }
   }
 
   // Load the survey script when component mounts
@@ -29,6 +67,12 @@ export default function MealmoLanding() {
     script.src = 'https://api.ezaisystems.com/js/form_embed.js'
     script.async = true
     document.head.appendChild(script)
+
+    // Track page view when component mounts
+    trackEvent("page_view", { 
+      section: "landing_page",
+      visitor_type: "new_visitor" 
+    })
 
     return () => {
       // Cleanup script when component unmounts
@@ -62,7 +106,7 @@ export default function MealmoLanding() {
                 </a>
               </Button>
               <Button
-                onClick={openWaitlistModal}
+                onClick={() => handleWaitlistClick("header")}
                 className="bg-forest-green hover:bg-bright-green text-white px-6 py-2 rounded-full font-semibold"
               >
                 Join Waitlist
@@ -86,16 +130,14 @@ export default function MealmoLanding() {
               <p className="text-xl lg:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Stop meal planning overwhelm - Let our AI save you time and money
               </p>
-            </div>
-
-            <Button
-              onClick={openWaitlistModal}
-              size="lg"
-              className="bg-forest-green hover:bg-bright-green text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              Join the Waitlist
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            </div>              <Button
+                onClick={() => handleWaitlistClick("hero_section")}
+                size="lg"
+                className="bg-forest-green hover:bg-bright-green text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Join the Waitlist
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
           </div>
 
           {/* Hero Visual - Image Carousel */}
@@ -262,7 +304,7 @@ export default function MealmoLanding() {
             </div>
 
             <Button
-              onClick={openWaitlistModal}
+              onClick={() => handleWaitlistClick("bottom_cta")}
               size="lg"
               className="bg-forest-green hover:bg-bright-green text-white px-12 py-6 text-xl font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300"
             >
