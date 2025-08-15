@@ -18,6 +18,7 @@ import ImageCarousel from "./components/image-carousel"
 
 export default function MealmoLanding() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false)
 
   // Replace with your actual GHL webhook URL
   const GHL_WEBHOOK_URL = "YOUR_GHL_WEBHOOK_URL_HERE"
@@ -30,6 +31,11 @@ export default function MealmoLanding() {
 
   const handleWaitlistClick = (buttonLocation: string) => {
     openWaitlistModal(buttonLocation)
+  }
+
+  const handleSurveyClick = (buttonLocation: string) => {
+    setIsSurveyModalOpen(true)
+    trackEvent("survey_button_clicked", { button_location: buttonLocation })
   }
 
   // Function to track events to GHL
@@ -63,10 +69,19 @@ export default function MealmoLanding() {
 
   // Load the survey script when component mounts
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src = 'https://api.ezaisystems.com/js/form_embed.js'
-    script.async = true
-    document.head.appendChild(script)
+    // Load the waitlist survey script
+    const waitlistScript = document.createElement('script')
+    waitlistScript.src = 'https://api.ezaisystems.com/js/form_embed.js'
+    waitlistScript.async = true
+    document.head.appendChild(waitlistScript)
+
+    // Load the GHL form script for the popup survey
+    const surveyScript = document.createElement('script')
+    surveyScript.src = 'https://api.ezaisystems.com/js/form_embed.js'
+    surveyScript.async = true
+    if (!document.head.querySelector(`script[src="${surveyScript.src}"]`)) {
+      document.head.appendChild(surveyScript)
+    }
 
     // Track page view when component mounts
     trackEvent("page_view", { 
@@ -75,9 +90,12 @@ export default function MealmoLanding() {
     })
 
     return () => {
-      // Cleanup script when component unmounts
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
+      // Cleanup scripts when component unmounts
+      if (document.head.contains(waitlistScript)) {
+        document.head.removeChild(waitlistScript)
+      }
+      if (document.head.contains(surveyScript)) {
+        document.head.removeChild(surveyScript)
       }
     }
   }, [])
@@ -130,7 +148,10 @@ export default function MealmoLanding() {
               <p className="text-xl lg:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Stop meal planning overwhelm - Let our AI save you time and money
               </p>
-            </div>              <Button
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button
                 onClick={() => handleWaitlistClick("hero_section")}
                 size="lg"
                 className="bg-forest-green hover:bg-bright-green text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
@@ -138,13 +159,34 @@ export default function MealmoLanding() {
                 Join the Waitlist
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+            </div>
           </div>
 
-          {/* Hero Visual - Image Carousel */}
-          <div className="mt-16 relative">
-            <ImageCarousel />
+          {/* Hero Visual Section with Help Shape MealMO */}
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Help Shape MealMO Section - Left Side */}
+            <div className="order-2 lg:order-1 space-y-6 text-center lg:text-left">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Help Shape MealMO</h2>
+              <p className="text-lg lg:text-xl text-gray-600 leading-relaxed">
+                Receive exclusive discounts + a chance to win a $25 grocery gift card
+              </p>
+              <div className="flex justify-center lg:justify-start">
+                <Button
+                  onClick={() => handleSurveyClick("hero_section")}
+                  size="lg"
+                  className="bg-ocean-blue hover:bg-ocean-blue/90 text-white px-6 py-3 text-base font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                >
+                  Take the 3-Minute Survey →
+                </Button>
+              </div>
+            </div>
 
-            {/* App Mockup Overlay */}
+            {/* Hero Visual - Image Carousel - Right Side */}
+            <div className="order-1 lg:order-2 relative">
+              <ImageCarousel />
+
+              {/* App Mockup Overlay */}
+            </div>
           </div>
         </div>
       </section>
@@ -312,6 +354,21 @@ export default function MealmoLanding() {
               <ArrowRight className="ml-3 h-6 w-6" />
             </Button>
 
+            {/* Help Shape MealMO Section */}
+            <div className="mt-16 space-y-6">
+              <h2 className="text-2xl lg:text-4xl font-bold text-gray-900">Help Shape MealMO</h2>
+              <p className="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
+                Receive exclusive discounts + a chance to win a $25 grocery gift card
+              </p>
+              <Button
+                onClick={() => handleSurveyClick("help_shape_section")}
+                size="lg"
+                className="bg-ocean-blue hover:bg-ocean-blue/90 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                Take the 3-Minute Survey →
+              </Button>
+            </div>
+
             <div className="mt-12 relative h-80 rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src="/stock images/pexels-janetrangdoan-1099680.jpg"
@@ -353,6 +410,35 @@ export default function MealmoLanding() {
             </div>
             
             <Button onClick={() => setIsModalOpen(false)} variant="outline" className="w-full mt-4">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Survey Modal */}
+      <Dialog open={isSurveyModalOpen} onOpenChange={setIsSurveyModalOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-hidden p-0">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="text-2xl font-bold text-center text-gray-900">Help Shape MealMO</DialogTitle>
+            <p className="text-gray-600 text-center">Take our 3-minute survey to help us build the perfect meal planning experience for you!</p>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {/* GHL Survey Form */}
+            <div className="w-full h-[75vh] overflow-auto">
+              <iframe
+                src="https://api.ezaisystems.com/widget/form/Pt0x5wTWJnKU3A4ETcBx"
+                style={{ width: '100%', height: '100%', minHeight: '800px', border: 'none' }}
+                id="survey-form-Pt0x5wTWJnKU3A4ETcBx"
+                title="Help Shape MealMO Survey"
+                className="w-full"
+                scrolling="yes"
+                frameBorder="0"
+              />
+            </div>
+          </div>
+          <div className="p-4 border-t">
+            <Button onClick={() => setIsSurveyModalOpen(false)} variant="outline" className="w-full">
               Close
             </Button>
           </div>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react"
 import Image from "next/image"
 
 const carouselImages = [
@@ -43,6 +44,7 @@ const carouselImages = [
 export default function ImageCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isEnlarged, setIsEnlarged] = useState(false)
 
   // Auto-advance slides
   useEffect(() => {
@@ -72,6 +74,16 @@ export default function ImageCarousel() {
     setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
     setIsAutoPlaying(false)
     setTimeout(() => setIsAutoPlaying(true), 10000)
+  }
+
+  const handleEnlarge = () => {
+    setIsEnlarged(true)
+    setIsAutoPlaying(false)
+  }
+
+  const handleCloseEnlarge = () => {
+    setIsEnlarged(false)
+    setIsAutoPlaying(true)
   }
 
   return (
@@ -122,6 +134,17 @@ export default function ImageCarousel() {
         <div className="absolute top-2 md:top-4 right-2 md:right-4 bg-black/50 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium">
           {currentSlide + 1} / {carouselImages.length}
         </div>
+
+        {/* Enlarge Button */}
+        <Button
+          onClick={handleEnlarge}
+          variant="outline"
+          size="sm"
+          className="absolute bottom-2 md:bottom-4 right-2 md:right-4 bg-white/90 hover:bg-white border-gray-200 shadow-lg z-10 w-8 h-8 md:w-10 md:h-10"
+          aria-label="Enlarge image"
+        >
+          <Expand className="h-4 w-4 md:h-5 md:w-5" />
+        </Button>
       </div>
 
       {/* Dot Indicators */}
@@ -161,6 +184,51 @@ export default function ImageCarousel() {
           </button>
         ))}
       </div>
+
+      {/* Enlarged Image Modal */}
+      <Dialog open={isEnlarged} onOpenChange={handleCloseEnlarge}>
+        <DialogContent className="max-w-7xl w-full max-h-[95vh] p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Enlarged Image View</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-[80vh] rounded-lg overflow-hidden">
+            <Image
+              src={carouselImages[currentSlide]?.src || "/placeholder.svg"}
+              alt={carouselImages[currentSlide]?.alt || "Enlarged image"}
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 90vw"
+              priority
+            />
+            
+            {/* Navigation in enlarged view */}
+            <Button
+              onClick={goToPrevious}
+              variant="outline"
+              size="sm"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-gray-200 shadow-lg z-10 w-10 h-10"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+
+            <Button
+              onClick={goToNext}
+              variant="outline"
+              size="sm"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white border-gray-200 shadow-lg z-10 w-10 h-10"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+
+            {/* Slide counter in enlarged view */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium">
+              {currentSlide + 1} / {carouselImages.length}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
